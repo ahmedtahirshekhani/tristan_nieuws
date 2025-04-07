@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kennis Quiz</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@700&display=swap');
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #1c1c1c, #2e2e2e);
+      color: white;
+    }
+
+    .quiz-container {
+      width: 100%;
+      max-width: 700px;
+      background: #2b2b2b;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      text-align: center;
+      margin: 40px auto;
+    }
+
+    .quiz-title {
+      font-size: 36px;
+      margin-bottom: 10px;
+      color: #ff3c3c;
+      letter-spacing: 1px;
+    }
+
+    .quiz-title-line {
+      width: 140px;
+      height: 3px;
+      background: white;
+      margin: 10px auto 20px auto;
+      border-radius: 2px;
+    }
+
+    .quiz-question {
+      font-size: 24px;
+      margin: 20px 0;
+      font-weight: bold;
+      color: white;
+    }
+
+    .quiz-container p,
+    .quiz-container h2 {
+      color: white;
+    }
+
+    .quiz-options button {
+      width: 100%;
+      padding: 14px;
+      margin: 10px 0;
+      background: #444;
+      color: white;
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
+      transition: background 0.3s ease;
+      cursor: pointer;
+    }
+
+    .quiz-options button:hover:not(:disabled) {
+      background: #5a6268;
+    }
+
+    .quiz-options button.correct {
+      background: #28a745 !important;
+    }
+
+    .quiz-options button.wrong {
+      background: #dc3545 !important;
+    }
+
+    .quiz-score {
+      font-size: 28px;
+      font-weight: bold;
+      color: white;
+      margin-bottom: 15px;
+    }
+
+    .quiz-summary {
+      text-align: left;
+      margin-top: 20px;
+    }
+
+    .quiz-summary div {
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .quiz-summary .correct {
+      background: #28a745;
+      color: white;
+    }
+
+    .quiz-summary .wrong {
+      background: #dc3545;
+      color: white;
+    }
+
+    .quiz-start-btn {
+      display: inline-block;
+      padding: 16px 32px;
+      font-size: 20px;
+      color: white;
+      background-color: #ff3c3c;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      margin-top: 20px;
+    }
+
+    .quiz-start-btn:hover {
+      background-color: #cc2f2f;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 10px;
+      background: #444;
+      border-radius: 5px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #ff3c3c;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .timer {
+      font-size: 18px;
+      margin-bottom: 10px;
+      color: white;
+    }
+
+    @media (max-width: 600px) {
+      .quiz-question {
+        font-size: 20px;
+      }
+      .quiz-options button {
+        font-size: 16px;
+      }
+      .quiz-title {
+        font-size: 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <h1 class="quiz-title">Kennis Quiz</h1>
+    <div class="quiz-title-line" id="title-line"></div>
+    <div id="quiz">
+      <p>Test je kennis met onze algemene kennis quiz</p>
+      <button class="quiz-start-btn" id="start-btn">Start de quiz</button>
+    </div>
+  </div>
+
+  <script>
+    function shuffle(array) {
+      return array.sort(() => Math.random() - 0.5);
+    }
+
+    const allQuestions = [
+      { question: "Wat is de hoofdstad van Frankrijk?", options: ["Parijs", "Londen", "Berlijn", "Madrid"], answer: "Parijs" },
+      { question: "Welke planeet staat bekend als de rode planeet?", options: ["Mars", "Venus", "Jupiter", "Saturnus"], answer: "Mars" },
+      { question: "Wie schilderde de Mona Lisa?", options: ["Leonardo da Vinci", "Vincent van Gogh", "Pablo Picasso", "Rembrandt"], answer: "Leonardo da Vinci" },
+      { question: "Wat is het chemische symbool voor water?", options: ["H2O", "CO2", "O2", "NaCl"], answer: "H2O" },
+      { question: "Wat is de langste rivier ter wereld?", options: ["Nijl", "Amazone", "Yangtze", "Mississippi"], answer: "Nijl" }
+    ];
+
+    let questions = [], currentQuestion = 0, score = 0, userAnswers = [], timerInterval;
+
+    document.getElementById("start-btn").addEventListener("click", startQuiz);
+
+    function resetToStartScreen() {
+      clearInterval(timerInterval);
+      document.getElementById("quiz").innerHTML = `
+        <p>Test je kennis met onze algemene kennis quiz</p>
+        <button class="quiz-start-btn" id="start-btn">Start de quiz</button>
+      `;
+      document.getElementById("title-line").style.display = 'block';
+      document.getElementById("start-btn").addEventListener("click", startQuiz);
+    }
+
+    function startQuiz() {
+      document.getElementById("title-line").style.display = 'none';
+      questions = shuffle([...allQuestions]).slice(0, 5);
+      currentQuestion = 0;
+      score = 0;
+      userAnswers = [];
+      nextQuestion();
+    }
+
+    function updateProgress() {
+      const percent = ((currentQuestion) / questions.length) * 100;
+      const fill = document.getElementById("progress-fill");
+      if (fill) fill.style.width = percent + "%";
+    }
+
+    function nextQuestion() {
+      clearInterval(timerInterval);
+      updateProgress();
+      if (currentQuestion < questions.length) {
+        const q = questions[currentQuestion];
+        const options = shuffle([...q.options]);
+        let timeLeft = 15;
+
+        document.getElementById("quiz").innerHTML = `
+          <div class="timer">Tijd over: <span id="timer">${timeLeft}</span> sec</div>
+          <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+          <div class="quiz-question">${q.question}</div>
+          <div class="quiz-options">
+            ${options.map(opt => `<button onclick="checkAnswer(this, '${opt}')">${opt}</button>`).join('')}
+          </div>
+        `;
+
+        timerInterval = setInterval(() => {
+          timeLeft--;
+          document.getElementById("timer").textContent = timeLeft;
+          if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            handleTimeout();
+          }
+        }, 1000);
+
+        updateProgress();
+      } else {
+        showResults();
+      }
+    }
+
+    function handleTimeout() {
+      const correct = questions[currentQuestion].answer;
+      userAnswers.push({ question: questions[currentQuestion].question, given: "(geen antwoord)", correct: false });
+      document.querySelectorAll(".quiz-options button").forEach(btn => btn.disabled = true);
+      setTimeout(() => {
+        currentQuestion++;
+        nextQuestion();
+      }, 1000);
+    }
+
+    function checkAnswer(button, selected) {
+      clearInterval(timerInterval);
+      const correct = questions[currentQuestion].answer;
+      document.querySelectorAll(".quiz-options button").forEach(btn => btn.disabled = true);
+      userAnswers.push({ question: questions[currentQuestion].question, given: selected, correct: selected === correct });
+
+      if (selected === correct) {
+        button.classList.add("correct");
+        score++;
+      } else {
+        button.classList.add("wrong");
+      }
+
+      setTimeout(() => {
+        currentQuestion++;
+        nextQuestion();
+      }, 1000);
+    }
+
+    function showResults() {
+      clearInterval(timerInterval);
+      const summary = userAnswers.map((item, i) =>
+        `<div class="${item.correct ? 'correct' : 'wrong'}">${i + 1}. ${item.question} - Jouw antwoord: ${item.given} (${item.correct ? 'Goed' : 'Fout'})</div>`
+      ).join('');
+
+      document.getElementById("quiz").innerHTML = `
+        <div class="quiz-title-line"></div>
+        <h2>Quiz voltooid!</h2>
+        <p class="quiz-score">Je score: ${score} / 5</p>
+        <div class="quiz-summary">${summary}</div>
+        <button class="quiz-start-btn" id="restart-btn">Opnieuw spelen</button>
+      `;
+
+      document.getElementById("restart-btn").addEventListener("click", resetToStartScreen);
+    }
+  </script>
+</body>
+</html>

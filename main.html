@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kennis Quiz</title>
+  <script src="questions.js"></script>
+  <style>
+ @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Roboto', sans-serif;
+  background: linear-gradient(135deg, #141e30, #243b55);
+  color: #fff;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  text-align: center;
+}
+
+.quiz-container {
+  background: #1f2a40;
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+  width: 100%;
+  max-width: 700px;
+  text-align: center;
+  margin: auto;
+}
+
+#header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+#logo {
+  height: 40px;
+}
+
+.quiz-title {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 10px 0;
+  color: #ff4c4c;
+}
+
+.quiz-title-line {
+  width: 100px;
+  height: 4px;
+  background: #fff;
+  margin: 0 auto 20px auto;
+  border-radius: 2px;
+}
+
+.quiz-question {
+  font-size: 24px;
+  margin: 20px 0;
+  font-weight: 700;
+}
+
+.quiz-options button {
+  width: 100%;
+  padding: 15px;
+  margin: 10px 0;
+  background: #2f3e5d;
+  color: #fff;
+  font-size: 18px;
+  border: none;
+  border-radius: 10px;
+  transition: background 0.3s ease;
+  cursor: pointer;
+}
+
+.quiz-options button:hover:not(:disabled) {
+  background: #3f4f6f;
+}
+
+.quiz-options button.correct {
+  background: #28a745 !important;
+}
+
+.quiz-options button.wrong {
+  background: #dc3545 !important;
+}
+
+.quiz-score {
+  font-size: 26px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #ffd700;
+}
+
+.quiz-summary {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.quiz-summary div {
+  padding: 10px 15px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.quiz-summary .correct {
+  background-color: #28a745;
+}
+
+.quiz-summary .wrong {
+  background-color: #dc3545;
+}
+
+.quiz-start-btn {
+  padding: 14px 28px;
+  font-size: 18px;
+  background: #ff4c4c;
+  border: none;
+  color: #fff;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  margin-top: 20px;
+}
+
+.quiz-start-btn:hover {
+  background: #cc3b3b;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 10px;
+  background: #394b6a;
+  border-radius: 5px;
+  overflow: hidden;
+  margin: 15px 0;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #ff4c4c;
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+.timer {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+@media (max-width: 600px) {
+  body {
+    padding: 10px;
+  }
+
+  .quiz-container {
+    padding: 20px;
+  }
+
+  .quiz-title {
+    font-size: 24px;
+  }
+
+  .quiz-question {
+    font-size: 20px;
+  }
+
+  .quiz-options button {
+    font-size: 16px;
+    padding: 12px;
+  }
+
+  .quiz-start-btn {
+    font-size: 16px;
+    padding: 12px 20px;
+  }
+}
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <div id="header">
+      <img src="niewwsnl_logo_w.png" alt="Logo" id="logo">
+    </div>
+    <h1 class="quiz-title">Kennis Quiz</h1>
+    <div class="quiz-title-line" id="title-line"></div>
+    <div id="quiz">
+      <p>Test je kennis met onze algemene kennis quiz</p>
+      <button class="quiz-start-btn" id="start-btn">Start de quiz</button>
+    </div>
+  </div> 
+
+  <script>
+    function shuffle(array) {
+      return array.sort(() => Math.random() - 0.5);
+    }
+
+
+    let questions = [], currentQuestion = 0, score = 0, userAnswers = [], timerInterval;
+
+    document.getElementById("start-btn").addEventListener("click", startQuiz);
+
+    function resetToStartScreen() {
+      clearInterval(timerInterval);
+      document.getElementById("quiz").innerHTML = `
+        <p>Test je kennis met onze algemene kennis quiz</p>
+        <button class="quiz-start-btn" id="start-btn">Start de quiz</button>
+      `;
+      document.getElementById("title-line").style.display = 'block';
+      document.getElementById("start-btn").addEventListener("click", startQuiz);
+    }
+
+    function startQuiz() {
+      document.getElementById("title-line").style.display = 'none';
+      questions = shuffle([...allQuestions]).slice(0, 10);
+      currentQuestion = 0;
+      score = 0;
+      userAnswers = [];
+      nextQuestion();
+    }
+
+    function updateProgress() {
+      const percent = ((currentQuestion) / questions.length) * 100;
+      const fill = document.getElementById("progress-fill");
+      if (fill) fill.style.width = percent + "%";
+    }
+
+    function nextQuestion() {
+      clearInterval(timerInterval);
+      updateProgress();
+      if (currentQuestion < questions.length) {
+        const q = questions[currentQuestion];
+        const options = shuffle([...q.options]);
+        let timeLeft = 15;
+
+        document.getElementById("quiz").innerHTML = `
+          <div class="timer">Tijd over: <span id="timer">${timeLeft}</span> sec</div>
+          <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+          <div class="quiz-question">${q.question}</div>
+          <div class="quiz-options">
+            ${options.map(opt => `<button onclick="checkAnswer(this, '${opt}')">${opt}</button>`).join('')}
+          </div>
+        `;
+
+        timerInterval = setInterval(() => {
+          timeLeft--;
+          document.getElementById("timer").textContent = timeLeft;
+          if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            handleTimeout();
+          }
+        }, 1000);
+
+        updateProgress();
+      } else {
+        showResults();
+      }
+    }
+
+    function handleTimeout() {
+      const correct = questions[currentQuestion].answer;
+      userAnswers.push({ question: questions[currentQuestion].question, given: "(geen antwoord)", correct: false });
+      document.querySelectorAll(".quiz-options button").forEach(btn => btn.disabled = true);
+      setTimeout(() => {
+        currentQuestion++;
+        nextQuestion();
+      }, 1000);
+    }
+
+    function checkAnswer(button, selected) {
+      clearInterval(timerInterval);
+      const correct = questions[currentQuestion].answer;
+      document.querySelectorAll(".quiz-options button").forEach(btn => btn.disabled = true);
+      userAnswers.push({ question: questions[currentQuestion].question, given: selected, correct: selected === correct });
+
+      if (selected === correct) {
+        button.classList.add("correct");
+        score++;
+      } else {
+        button.classList.add("wrong");
+      }
+
+      setTimeout(() => {
+        currentQuestion++;
+        nextQuestion();
+      }, 1000);
+    }
+
+    function showResults() {
+      clearInterval(timerInterval);
+      const summary = userAnswers.map((item, i) =>
+        `<div class="${item.correct ? 'correct' : 'wrong'}">${i + 1}. ${item.question} - Jouw antwoord: ${item.given} (${item.correct ? 'Goed' : 'Fout'})</div>`
+      ).join('');
+
+      document.getElementById("quiz").innerHTML = `
+        <div class="quiz-title-line"></div>
+        <h2>Quiz voltooid!</h2>
+        <p class="quiz-score">Je score: ${score} / 10</p>
+        <div class="quiz-summary">${summary}</div>
+        <button class="quiz-start-btn" id="restart-btn">Opnieuw spelen</button>
+      `;
+
+      document.getElementById("restart-btn").addEventListener("click", resetToStartScreen);
+    }
+  </script>
+</body>
+</html>

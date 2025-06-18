@@ -1,13 +1,52 @@
-<iframe 
-  src="https://nieuwsnl.vercel.app/" 
-  style="
-    width: 100%; 
-    height: 100%; 
-    border: none; 
-    border-radius: 20px; 
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); 
-    display: block;
-  "
-  allowfullscreen
-  loading="lazy"
-></iframe>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iframe Height Example</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    #iframe-container {
+      width: 100%;
+      height: 400px;
+      transition: height 0.3s ease;
+      overflow: hidden;
+      cursor: pointer; /* Makes the container clickable */
+    }
+    iframe {
+      width: 100%;
+      border: none;
+      border-radius: 20px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="iframe-container">
+    <iframe 
+      src="https://nieuwsnl.vercel.app/" 
+      id="myIframe"
+      allowfullscreen
+    ></iframe>
+  </div>
+
+  <script>
+    // Listen for a click on the iframe container
+    document.getElementById('myIframe').addEventListener('click', function() {
+      // Change the iframe height to 600px when the container is clicked
+      console.log('Iframe clicked');
+      document.getElementById('iframe-container').style.height = '600px !important';
+      document.getElementById('myIframe').style.height = '100%';
+    });
+  </script>
+
+</body>
+</html>
